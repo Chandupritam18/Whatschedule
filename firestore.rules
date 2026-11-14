@@ -1,0 +1,247 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidChannel(channel) {
+      return channel is string &&
+        channel in ['WHATSAPP', 'WHATSAPP_BUSINESS', 'TELEGRAM', 'SMS', 'EMAIL', 'CALL'];
+    }
+
+    function isValidTemplateChannel(channel) {
+      return channel is string &&
+        channel in ['ALL', 'WHATSAPP', 'WHATSAPP_BUSINESS', 'TELEGRAM', 'SMS', 'EMAIL', 'CALL'];
+    }
+
+    function isValidRepeatInterval(interval) {
+      return interval is string &&
+        interval in ['NONE', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'];
+    }
+
+    function isValidScheduleStatus(status) {
+      return status is string &&
+        status in ['PENDING', 'PAUSED', 'SENT', 'FAILED', 'CANCELLED'];
+    }
+
+    function isValidTemplateCategory(category) {
+      return category is string &&
+        category in ['WORK', 'PERSONAL', 'REMINDER', 'MARKETING', 'FOLLOW_UP'];
+    }
+
+    function isValidScheduleItem(data, userId) {
+      return data.keys().hasAll([
+          'userId',
+          'channel',
+          'recipientName',
+          'recipientTarget',
+          'subject',
+          'messageBody',
+          'attachmentLabel',
+          'scheduledEpochMillis',
+          'repeatInterval',
+          'askBeforeSending',
+          'notifyOnComplete',
+          'status',
+          'executionCount',
+          'lastExecutedEpochMillis',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId',
+          'channel',
+          'recipientName',
+          'recipientTarget',
+          'subject',
+          'messageBody',
+          'attachmentLabel',
+          'scheduledEpochMillis',
+          'repeatInterval',
+          'askBeforeSending',
+          'notifyOnComplete',
+          'status',
+          'executionCount',
+          'lastExecutedEpochMillis',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+        isValidChannel(data.channel) &&
+        data.recipientName is string && data.recipientName.size() >= 1 && data.recipientName.size() <= 120 &&
+        data.recipientTarget is string && data.recipientTarget.size() >= 1 && data.recipientTarget.size() <= 250 &&
+        data.subject is string && data.subject.size() <= 180 &&
+        data.messageBody is string && data.messageBody.size() >= 1 && data.messageBody.size() <= 2000 &&
+        data.attachmentLabel is string && data.attachmentLabel.size() <= 180 &&
+        data.scheduledEpochMillis is int && data.scheduledEpochMillis > 0 &&
+        isValidRepeatInterval(data.repeatInterval) &&
+        data.askBeforeSending is bool &&
+        data.notifyOnComplete is bool &&
+        isValidScheduleStatus(data.status) &&
+        data.executionCount is int && data.executionCount >= 0 &&
+        data.lastExecutedEpochMillis is int && data.lastExecutedEpochMillis >= 0 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMessageTemplate(data, userId) {
+      return data.keys().hasAll([
+          'userId',
+          'title',
+          'category',
+          'channel',
+          'content',
+          'usageCount',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId',
+          'title',
+          'category',
+          'channel',
+          'content',
+          'usageCount',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+        isValidTemplateCategory(data.category) &&
+        isValidTemplateChannel(data.channel) &&
+        data.content is string && data.content.size() >= 1 && data.content.size() <= 2000 &&
+        data.usageCount is int && data.usageCount >= 0 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidRecipientGroup(data, userId) {
+      return data.keys().hasAll([
+          'userId',
+          'name',
+          'channel',
+          'membersSummary',
+          'memberCount',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId',
+          'name',
+          'channel',
+          'membersSummary',
+          'memberCount',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        isValidChannel(data.channel) &&
+        data.membersSummary is string && data.membersSummary.size() >= 1 && data.membersSummary.size() <= 500 &&
+        data.memberCount is int && data.memberCount >= 1 && data.memberCount <= 200 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/schedules/{scheduleId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(scheduleId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(scheduleId) &&
+        isValidScheduleItem(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(scheduleId) &&
+        isValidScheduleItem(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'channel',
+          'recipientName',
+          'recipientTarget',
+          'subject',
+          'messageBody',
+          'attachmentLabel',
+          'scheduledEpochMillis',
+          'repeatInterval',
+          'askBeforeSending',
+          'notifyOnComplete',
+          'status',
+          'executionCount',
+          'lastExecutedEpochMillis',
+          'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(scheduleId);
+    }
+
+    match /users/{userId}/templates/{templateId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(templateId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(templateId) &&
+        isValidMessageTemplate(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(templateId) &&
+        isValidMessageTemplate(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title',
+          'category',
+          'channel',
+          'content',
+          'usageCount',
+          'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(templateId);
+    }
+
+    match /users/{userId}/groups/{groupId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(groupId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(groupId) &&
+        isValidRecipientGroup(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidId(groupId) &&
+        isValidRecipientGroup(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name',
+          'channel',
+          'membersSummary',
+          'memberCount',
+          'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(groupId);
+    }
+  }
+}

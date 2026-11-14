@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Whatschedule</string>
+    <string name="top_creator_banner">Made by Chandu Pritam</string>
+    <string name="tagline_subtitle">Auto-Schedule Messages, Emails &amp; Calls</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="auth_headline">Automate Your Communication</string>
+    <string name="auth_subheadline">Schedule WhatsApp, WhatsApp Business, Telegram, SMS, Emails, and Call reminders with recurring rules, templates, and cloud sync.</string>
+    <string name="nav_schedules">Schedules</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_templates">Templates</string>
+    <string name="nav_groups">Groups</string>
+    <string name="nav_settings">Settings</string>
+    <string name="action_new_schedule">New Schedule</string>
+    <string name="action_save_schedule">Schedule Now</string>
+    <string name="action_update_schedule">Update Schedule</string>
+    <string name="action_send_now">Dispatch Now</string>
+    <string name="action_sign_out">Sign Out</string>
+    <string name="filter_all">All</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_paused">Paused</string>
+    <string name="filter_sent">Sent</string>
+    <string name="filter_failed">Failed</string>
+    <string name="empty_schedules_title">No Scheduled Messages Found</string>
+    <string name="empty_schedules_subtitle">Tap the + button or pick a channel above to schedule your first automated WhatsApp, Telegram, SMS, Email, or Call.</string>
+    <string name="ask_before_sending_title">Ask me before sending</string>
+    <string name="ask_before_sending_desc">Receive a confirmation prompt at the scheduled time before dispatching</string>
+    <string name="notify_on_complete_title">Notification alert</string>
+    <string name="notify_on_complete_desc">Show status notification when schedule triggers</string>
+    <string name="accessibility_service_description">Allows Whatschedule to assist with automated scheduled message dispatch across supported messaging apps.</string>
+</resources>
