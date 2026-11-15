@@ -16,15 +16,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Create Release Keystore and Firebase config
+      - name: Create Release Keystore
         run: |
           keytool -genkey -v -keystore my-upload-key.jks -storepass Whatschedule123 -alias upload -keypass Whatschedule123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Whatschedule,O=Developer,C=IN"
-          mkdir -p app/src/main/res/values
-          cat << 'EOF' > app/src/main/res/values/firebase_fix.xml
-          <resources>
-              <string name="default_web_client_id" translatable="false">dummy-client-id</string>
-          </resources>
-          EOF
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
