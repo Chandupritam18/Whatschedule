@@ -1,4 +1,4 @@
-name: Build Kotlin APK
+name: Build Signed Release APK
 on:
   push:
   workflow_dispatch:
@@ -16,9 +16,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Create missing keystore and Firebase config
+      - name: Create Release Keystore and Firebase config
         run: |
-          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          keytool -genkey -v -keystore release.keystore -storepass Whatschedule123 -alias whatschedulekey -keypass Whatschedule123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Whatschedule,O=Developer,C=IN"
           mkdir -p app/src/main/res/values
           cat << 'EOF' > app/src/main/res/values/firebase_fix.xml
           <resources>
@@ -31,12 +31,18 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
+      - name: Build Release APK
+        run: gradle assembleRelease
 
-      - name: Upload APK
+      - name: Sign Release APK
+        run: |
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | tail -n 1)
+          $BUILD_TOOLS/zipalign -v -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app-aligned.apk
+          $BUILD_TOOLS/apksigner sign --ks release.keystore --ks-key-alias whatschedulekey --ks-pass pass:Whatschedule123 --key-pass pass:Whatschedule123 --out Whatschedule-Release.apk app-aligned.apk
+
+      - name: Upload Signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: Whatschedule-App
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Whatschedule-Release-APK
+          path: Whatschedule-Release.apk
           
