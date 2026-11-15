@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "119803823085",
+    "project_id": "whatschedule-c17dc",
+    "storage_bucket": "whatschedule-c17dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119803823085:android:a8b8587c5dcd248cf51de4",
+        "android_client_info": {
+          "package_name": "com.aistudio.skedit.wx4x6p"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtOwLInjAVF3KnXuZ9MAnLF1zHY_wvmtk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
