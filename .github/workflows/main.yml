@@ -16,6 +16,16 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Create missing keystore and Firebase config
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          mkdir -p app/src/main/res/values
+          cat << 'EOF' > app/src/main/res/values/firebase_fix.xml
+          <resources>
+              <string name="default_web_client_id" translatable="false">dummy-client-id</string>
+          </resources>
+          EOF
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
