@@ -18,7 +18,7 @@ jobs:
 
       - name: Create Release Keystore and Firebase config
         run: |
-          keytool -genkey -v -keystore release.keystore -storepass Whatschedule123 -alias whatschedulekey -keypass Whatschedule123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Whatschedule,O=Developer,C=IN"
+          keytool -genkey -v -keystore my-upload-key.jks -storepass Whatschedule123 -alias upload -keypass Whatschedule123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Whatschedule,O=Developer,C=IN"
           mkdir -p app/src/main/res/values
           cat << 'EOF' > app/src/main/res/values/firebase_fix.xml
           <resources>
@@ -31,18 +31,15 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
-      - name: Build Release APK
+      - name: Build Signed Release APK
+        env:
+          STORE_PASSWORD: Whatschedule123
+          KEY_PASSWORD: Whatschedule123
         run: gradle assembleRelease
-
-      - name: Sign Release APK
-        run: |
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | tail -n 1)
-          $BUILD_TOOLS/zipalign -v -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app-aligned.apk
-          $BUILD_TOOLS/apksigner sign --ks release.keystore --ks-key-alias whatschedulekey --ks-pass pass:Whatschedule123 --key-pass pass:Whatschedule123 --out Whatschedule-Release.apk app-aligned.apk
 
       - name: Upload Signed Release APK
         uses: actions/upload-artifact@v4
         with:
           name: Whatschedule-Release-APK
-          path: Whatschedule-Release.apk
+          path: app/build/outputs/apk/release/app-release.apk
           
